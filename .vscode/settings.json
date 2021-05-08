@@ -1,3 +1,5 @@
 {
-    "go.inferGopath": true
+    "go.inferGopath": true,
+    "go.toolsGopath": "/Users/lewin/go",
+    "go.gopath": "${workspaceRoot}",
 }
