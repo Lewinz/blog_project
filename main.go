@@ -6,6 +6,7 @@ import (
 	"blog_project/components/db"
 	"blog_project/filter"
 	"blog_project/models"
+	"blog_project/user"
 	"flag"
 	"fmt"
 	"net/http"
@@ -57,13 +58,11 @@ func main() {
 
 	engine.GET("/createToken", filter.CreateToken)
 
+	engine.POST("/user/register", user.Create) // 用户注册
+
 	group := engine.Group("/blog", filter.AuthCheck)
 	{
 		group.POST("/create", blog.Create)
-
-		group.POST("/xxx1", func(c *gin.Context) {
-
-		})
 	}
 
 	srv := &http.Server{

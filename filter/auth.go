@@ -1,6 +1,7 @@
 package filter
 
 import (
+	"blog_project/components/db"
 	"blog_project/models"
 	"log"
 	"net/http"
@@ -54,32 +55,38 @@ func AuthCheck(c *gin.Context) {
 
 // CreateToken create jwt token by name password
 func CreateToken(c *gin.Context) {
-	var u models.User
+	var (
+		u  = models.User{}
+		db = db.Get()
+	)
 
-	c.ShouldBind(&u)
+	if err := c.ShouldBind(&u); err == nil && u.Name != "" && u.Password != "" {
+		result := db.Where("name=? and password=?", u.Name, u.Password).Find(&u)
 
-	if u.Name != "" && u.Password != "" {
-		claims := MyClaims{
-			u.Name,
-			jwt.StandardClaims{
-				ExpiresAt: time.Now().Add(TokenExpireDuration).Unix(),
-				Issuer:    "blog_project",
-			},
+		if result.RowsAffected > 0 {
+			claims := MyClaims{
+				u.Name,
+				jwt.StandardClaims{
+					ExpiresAt: time.Now().Add(TokenExpireDuration).Unix(),
+					Issuer:    "blog_project",
+				},
+			}
+
+			token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+			result, _ := token.SignedString(MySecret)
+
+			log.Println("token-", result)
+
+			c.SetCookie("blog_project", result, 20000, "/", "", false, true)
+			c.JSON(http.StatusOK, gin.H{
+				"token": result,
+			})
+			return
 		}
-
-		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
-		result, _ := token.SignedString(MySecret)
-
-		log.Println("token-", result)
-
-		c.SetCookie("blog_project", result, 20000, "/", "", false, true)
-		c.JSON(http.StatusOK, gin.H{
-			"token": result,
-		})
-	} else {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"errMessage": "create token faild: name & password must not empty",
-		})
 	}
+
+	c.JSON(http.StatusInternalServerError, gin.H{
+		"errMessage": "create token faild: name & password must not empty and valid",
+	})
 }
