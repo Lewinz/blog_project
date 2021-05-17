@@ -17,7 +17,7 @@ import (
 
 func initConfig() {
 	// -------------------------------------------------------
-	// 初始化配置文件，从命令行中服务参数
+	// 初始化配置文件，从命令行中服务参数11111
 	config.SetConfigType("yaml")
 
 	var configPath string
